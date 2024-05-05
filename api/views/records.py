@@ -5,10 +5,9 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-
 from api.models import Consultant, Client
+from api.serializers.client import ClientSerializerIIN
 from api.serializers.consultant import LiveResponseSerializer
-
 
 
 @extend_schema(
@@ -79,3 +78,9 @@ class RecordAPIView(APIView):
         ]}
 
 
+class ClientDetailView(APIView):
+    def get(self, request, iin):
+        clients = Client.objects.filter(iin=iin, status='waiting').prefetch_related('consultant',
+                                                                                    'consultant__establishment')
+        serializer = ClientSerializerIIN(clients, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)

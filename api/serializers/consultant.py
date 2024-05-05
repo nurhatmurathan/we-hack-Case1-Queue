@@ -1,5 +1,11 @@
 from rest_framework import serializers
-from api.models import Consultant
+from api.models import Consultant, Establishment
+
+
+class EstablishmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Establishment
+        fields = "__all__"
 
 
 class ConsultantSerializer(serializers.ModelSerializer):
@@ -13,3 +19,11 @@ class LiveResponseSerializer(serializers.Serializer):
         child=serializers.CharField(),
         help_text="Details about live status such as queue length and waiting time"
     )
+
+
+class ConsultantSerializer2(serializers.ModelSerializer):
+    establishment = EstablishmentSerializer()
+
+    class Meta:
+        model = Consultant
+        fields = ['name', 'type', 'establishment']
