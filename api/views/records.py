@@ -1,3 +1,4 @@
+from django.db.models import Count
 from django.shortcuts import get_object_or_404
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, OpenApiParameter, inline_serializer
@@ -7,8 +8,13 @@ from rest_framework import status
 
 from api.models import Consultant, Client
 from api.serializers.client import ClientSerializerIIN
-from api.serializers.consultant import LiveResponseSerializer
+from django.utils.timezone import now
 
+
+from api.models import Consultant, Client, Establishment, TimeSlots, Booking
+
+from api.serializers.consultant import LiveResponseSerializer
+from api.serializers.timeslot import TimeSlotSerializer
 
 @extend_schema(
     parameters=[
@@ -24,7 +30,7 @@ from api.serializers.consultant import LiveResponseSerializer
         200: inline_serializer(
             name='CommandResponse',
             fields={
-                # 'date': DateResponseSerializer(help_text="Response if 'date' command is issued"),
+                'date': TimeSlotSerializer(help_text="Response if 'date' command is issued"),
                 'live': LiveResponseSerializer(help_text="Response if 'live' command is issued"),
             },
             many=False,
@@ -36,15 +42,13 @@ class RecordAPIView(APIView):
     def get(self, request, establishment_id):
         try:
             response = self._handle_request(request, establishment_id)
+
             if response is None:
                 return Response(data={'error': 'Invalid command type'}, status=status.HTTP_400_BAD_REQUEST)
+
             return Response(data=response, status=status.HTTP_200_OK)
-        except ValueError as ve:
-            return Response(data={'error': str(ve)}, status=status.HTTP_400_BAD_REQUEST)
-        except KeyError as ke:
-            return Response(data={'error': 'Command not found'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as exception:
-            return Response(data={'error': 'Server error'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(data={'error': str(exception)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def _handle_request(self, request, establishment_id):
         command_type = str(request.query_params.get('command', '')).lower()
@@ -61,14 +65,28 @@ class RecordAPIView(APIView):
             raise KeyError("Command handler not found for the provided command type.")
 
     def _handle_date_command(self, establishment_id):
-        return {'result': f'Date command handled for {establishment_id}'}
+        establishment = get_object_or_404(Establishment, id=establishment_id)
+        consultants = establishment.consultant_set.filter(type='date')
+
+        all_slots = TimeSlots.objects.all()
+        bookings = Booking.objects.filter(
+            date=now().date(),
+            consultant__in=consultants
+        ).values('slot_id').annotate(booked_count=Count('slot_id'))
+        bookings_map = {booking['slot_id']: booking['booked_count'] for booking in bookings}
+
+        available_slots = []
+        for slot in all_slots:
+            booked_count = bookings_map.get(slot.id, 0)
+            if booked_count < consultants.count():
+                available_slots.append(slot)
+
+        serializer = TimeSlotSerializer(available_slots, many=True)
+        return {'result': serializer.data}
 
     def _handle_live_command(self, establishment_id):
-
         consultants = Consultant.objects.filter(establishment_id=establishment_id)
-
         clients = Client.objects.filter(consultant__in=consultants, status__in=['processing', 'waiting'])
-
         clients_in_processing = clients.filter(status="processing")
 
         return {'headers': [
