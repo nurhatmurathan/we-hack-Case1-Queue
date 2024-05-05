@@ -34,13 +34,13 @@ jobs:
         context: .
         file: ./Dockerfile
         push: true
-        tags: nurhatmurathan/boilerplate:${{ github.sha }} # dockergub user/repo:tag
+        tags: nurhatmurathan/wehack_case1_queue:${{ github.sha }} # dockergub user/repo:tag
 
     - name: Setup GCloud CLI
       uses: google-github-actions/setup-gcloud@v0
       with:
         service_account_key: ${{ secrets.GCP_SA_KEY }} # service account json
-        project_id: muratkan-trial-v2 # gcp project id
+        project_id: carbon-zone-417117 # gcp project id
 
     - name: Configure Docker for GCloud CLI
       run: gcloud auth configure-docker
@@ -48,10 +48,9 @@ jobs:
     - name: Deploy to Google Cloud Run
       run: | # cloud run deploy settings - service name, image, region ...
         gcloud run deploy django-boilerplate \
-          --image=docker.io/nurhatmurathan/boilerplate:${{ github.sha }} \
+          --image=docker.io/nurhatmurathan/wehack_case1_queue:${{ github.sha }} \
           --region=us-central1 \
           --allow-unauthenticated \
           --port=8000 \
           --min-instances=1 \
-          --max-instances=2 \
-          --set-env-vars DB_HOST=${{ secrets.DB_HOST }},DB_NAME=${{ secrets.DB_NAME }},DB_USER=${{ secrets.DB_USER }},DB_PASS=${{ secrets.DB_PASS }}
+          --max-instances=2 
