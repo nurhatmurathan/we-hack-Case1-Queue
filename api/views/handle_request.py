@@ -36,9 +36,13 @@ class HandleRequestAPIView(APIView):
 
     def post(self, request, establishment_id):
         try:
+            print("Query params: ")
             print(establishment_id)
+            print(self.request.query_params.get('slot'))
+            print((self.request.query_params.get('command')))
+
             response = self._handle_request(establishment_id)
-            return Response(data=response, status=status.HTTP_200_OK)
+            return Response(data={'message': response}, status=status.HTTP_200_OK)
         except Exception as exception:
             return Response(data={'error': str(exception)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -46,8 +50,7 @@ class HandleRequestAPIView(APIView):
         command_type = str(self.request.query_params.get('command')).lower()
         self._validate_type(command_type)
 
-        slot_id = self.request.query_params.get('slot_id')
-
+        slot_id = self.request.query_params.get('slot')
         command_handlers = {
             'date': self._handle_date_command,
             'live': self._handle_live_command,
@@ -57,17 +60,17 @@ class HandleRequestAPIView(APIView):
         return handler(establishment_id, slot_id)
 
     def _handle_date_command(self, establishment_id, slot_id):
+        print("In date code")
         establishment = get_object_or_404(Establishment, id=establishment_id)
-        consultants = establishment.consultant_set.all()
+        consultants = establishment.consultant_set.filter(type='date')
 
         slot = get_object_or_404(TimeSlots, id=slot_id)
-
         busy_consultants = Booking.objects.filter(date=now().date(), slot=slot).values_list('consultant_id', flat=True)
-        available_consultants = consultants.exclude(id__in=busy_consultants)
 
+        available_consultants = consultants.exclude(id__in=busy_consultants)
         self._validate_busy_consultants(available_consultants)
 
-        client = self._create_client(available_consultants.first())
+        client = self._create_client(available_consultants.first().id)
         Booking.objects.create(
             slot=slot,
             client=client,
@@ -94,6 +97,7 @@ class HandleRequestAPIView(APIView):
 
     def _create_client(self, consultant_id=None):
         data = self.request.data
+
         data['consultant'] = consultant_id
 
         serializer = ClientSerializer(data=data, many=False)
