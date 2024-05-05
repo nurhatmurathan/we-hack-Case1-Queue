@@ -1,3 +1,6 @@
+from django.db.models import OuterRef, Exists
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema, OpenApiParameter, inline_serializer
 from rest_framework.exceptions import NotFound
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -10,6 +13,25 @@ from api.serializers.client import ClientSerializer
 from api.models import *
 
 
+@extend_schema(
+    parameters=[
+        OpenApiParameter(
+            name='command',
+            type=OpenApiTypes.STR,
+            required=True,
+            description='response : OK!',
+            enum=['date', 'live']
+        ),
+        OpenApiParameter(
+            name='slot',
+            type=OpenApiTypes.STR,
+            required=True,
+            description='id of slot',
+            default="2"
+        )
+    ],
+    request=ClientSerializer(many=False)
+)
 class HandleRequestAPIView(APIView):
 
     def post(self, request, establishment_id):
@@ -58,7 +80,20 @@ class HandleRequestAPIView(APIView):
         return "OK!"
 
     def _handle_live_command(self, establishment_id, slot_id):
-        pass
+        establishment = get_object_or_404(Establishment, id=establishment_id)
+
+        clients_with_processing = Client.objects.filter(
+            consultant=OuterRef('pk'),
+            status='processing'
+        )
+
+        available_consultants = establishment.consultant_set.annotate(
+            has_processing=Exists(clients_with_processing)
+        ).filter(has_processing=False)
+
+        client = self._create_client(available_consultants.first().id)
+
+        return "OK!"
 
     def _create_client(self, consultant_id=None):
         data = self.request.data
@@ -75,6 +110,6 @@ class HandleRequestAPIView(APIView):
         if not available_consultants.exists():
             raise NotFound("No available consultants for the given slot and date.")
 
-    def _validate_type(self,  command_type):
+    def _validate_type(self, command_type):
         if command_type not in ['date', 'live']:
             raise NotFound("Undefined type of consultant.")
