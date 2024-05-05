@@ -25,7 +25,7 @@ jobs:
       id: meta
       uses: docker/metadata-action@v3
       with:
-        images: nurhatmurathan/boilerplate # dockerhub repository
+        images: nurhatmurathan/we-hack-Case1-Queue # dockerhub repository
         tags: type=sha,prefix=commit,format=long
 
     - name: Build and push Docker image
@@ -47,7 +47,7 @@ jobs:
 
     - name: Deploy to Google Cloud Run
       run: | # cloud run deploy settings - service name, image, region ...
-        gcloud run deploy django-boilerplate \
+        gcloud run deploy queue-service \
           --image=docker.io/nurhatmurathan/wehack_case1_queue:${{ github.sha }} \
           --region=us-central1 \
           --allow-unauthenticated \
