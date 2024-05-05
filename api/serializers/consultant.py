@@ -27,3 +27,11 @@ class ConsultantSerializer2(serializers.ModelSerializer):
     class Meta:
         model = Consultant
         fields = ['name', 'type', 'establishment']
+
+
+class ConsultantEstablishmentSerializer(serializers.ModelSerializer):
+    establishment = EstablishmentSerializer()
+
+    class Meta:
+        model = Consultant
+        fields = ['name', 'type', 'establishment']

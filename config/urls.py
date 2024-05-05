@@ -53,7 +53,8 @@ urlpatterns = [
     ),
 
     path('api/', include('api.urls.establishment')),
-    path('api/clients/', include('api.urls.clients')),
+    path('api/', include('api.urls.consultant')),
+    path('api/', include('api.urls.clients')),
 
 ]
 

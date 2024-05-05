@@ -27,7 +27,7 @@ class ConsultantSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Consultant
-        fields = ['id', 'name', 'type', 'establishment']
+        fields = ['name', 'type', 'establishment']
 
 
 class TimeSlotSerializer(serializers.ModelSerializer):
@@ -56,3 +56,21 @@ class ClientSerializerIIN(serializers.ModelSerializer):
                     'consultant': booking.consultant.name if booking.consultant else None
                 }
         return None
+
+
+class ClientListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Client
+        fields = ['id', 'email', 'iin', 'status']
+
+
+class ClientUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Client
+        fields = ['status']
+
+
+    def update(self, instance, validated_data):
+        instance.status = validated_data.get('status', instance.status)
+        instance.save()
+        return instance
