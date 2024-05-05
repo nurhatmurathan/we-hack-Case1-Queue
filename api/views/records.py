@@ -96,6 +96,15 @@ class RecordAPIView(APIView):
         ]}
 
 
+@extend_schema(
+    responses={
+        200: ClientSerializerIIN(many=True)
+    },
+    description="Retrieve detailed client information based on IIN and status including consultant details. \
+    Returns different details based on whether the consultant's type is 'live' or 'date'.",
+    summary="Get Client Details by IIN",
+    tags=['Client Operations']
+)
 class ClientDetailView(APIView):
     def get(self, request, iin):
         clients = Client.objects.filter(iin=iin, status='waiting').prefetch_related('consultant',
