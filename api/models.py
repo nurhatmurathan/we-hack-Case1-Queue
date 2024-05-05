@@ -5,6 +5,7 @@ from django.db.models import UniqueConstraint
 class Establishment(models.Model):
     name = models.CharField(max_length=255)
     address = models.CharField(max_length=255)
+    url = models.CharField(max_length=2555, null=True, blank=True)
 
     def __str__(self):
         return self.name
