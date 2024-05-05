@@ -37,8 +37,8 @@ class Client(models.Model):
         ('waiting', 'WAITING'),
         ('processing', 'PROCESSING'),
         ('finished', 'FINISHED')
-    ])
-    consultant = models.ForeignKey(Consultant, on_delete=models.CASCADE)
+    ], default='waiting')
+    consultant = models.ForeignKey(Consultant, null=True, blank=True, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.email
@@ -52,7 +52,7 @@ class Booking(models.Model):
     date = models.DateField(auto_now=True)
     slot = models.ForeignKey(TimeSlots, null=True, blank=True, on_delete=models.SET_NULL)
     consultant = models.ForeignKey(Consultant, null=True, blank=True, on_delete=models.SET_NULL)
+    client = models.ForeignKey(Client, null=True, blank=True, on_delete=models.SET_NULL)
 
     def __str__(self):
         return f"{self.consultant.name} - {self.date}"
-
