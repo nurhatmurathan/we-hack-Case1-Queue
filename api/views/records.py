@@ -4,7 +4,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-from api.models import Consultant
+from api.models import Consultant, Client
 from api.serializers.consultant import LiveResponseSerializer
 
 
@@ -65,12 +65,16 @@ class RecordAPIView(APIView):
 
     def _handle_live_command(self, establishment_id):
 
-        # Consultant.objects.filter(establishment_id=establishment_id)
+        consultants = Consultant.objects.filter(establishment_id=establishment_id)
+
+        clients = Client.objects.filter(consultant__in=consultants, status__in=['processing', 'waiting'])
+
+        clients_in_processing = clients.filter(status="processing")
 
         return {'headers': [
-            "Свободные окошки 7/0",
-            "В очереди 12 человек",
-            "Время ожидания 47 мин"
+            f"Свободные окошки {len(consultants)}/{len(consultants) - len(clients_in_processing)}",
+            f"В очереди {len(clients)} человек",
+            f"Время ожидания {len(clients) * 15} мин"
         ]}
 
 
