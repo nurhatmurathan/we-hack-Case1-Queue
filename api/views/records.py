@@ -5,7 +5,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-from api.models import *
+
+from api.models import Consultant, Client
 from api.serializers.consultant import LiveResponseSerializer
 
 
@@ -61,51 +62,20 @@ class RecordAPIView(APIView):
             raise KeyError("Command handler not found for the provided command type.")
 
     def _handle_date_command(self, establishment_id):
-        establishment = get_object_or_404(Establishment, id=establishment_id)
-
-        # Retrieve all consultants for the establishment
-        consultants = establishment.consultant_set.all()
-
-        # Specify the date for which to check availability
-        target_date = request.query_params.get('date', now().date())
-
-        # Retrieve all slots
-        all_slots = TimeSlots.objects.all()
-
-        # Determine the number of bookings per slot on the given date
-        bookings = Booking.objects.filter(
-            date=target_date,
-            consultant__in=consultants
-        ).values('slot_id').annotate(booked_count=Count('slot_id'))
-
-        # Map bookings to their respective slots
-        bookings_map = {booking['slot_id']: booking['booked_count'] for booking in bookings}
-
-        # Prepare list of available slots
-        available_slots = []
-        for slot in all_slots:
-            # Check how many consultants are booked in each slot
-            booked_count = bookings_map.get(slot.id, 0)
-
-            # If the booked count is less than the number of consultants, the slot is available
-            if booked_count < consultants.count():
-                available_slots.append(slot)
-
-        # Serialize the available slots to send as a response
-        # Assuming you have a serializer called TimeSlotSerializer
-        serializer = TimeSlotSerializer(available_slots, many=True)
-        return Response(serializer.data)
-
         return {'result': f'Date command handled for {establishment_id}'}
 
     def _handle_live_command(self, establishment_id):
 
-        # Consultant.objects.filter(establishment_id=establishment_id)
+        consultants = Consultant.objects.filter(establishment_id=establishment_id)
+
+        clients = Client.objects.filter(consultant__in=consultants, status__in=['processing', 'waiting'])
+
+        clients_in_processing = clients.filter(status="processing")
 
         return {'headers': [
-            "Свободные окошки 7/0",
-            "В очереди 12 человек",
-            "Время ожидания 47 мин"
+            f"Свободные окошки {len(consultants)}/{len(consultants) - len(clients_in_processing)}",
+            f"В очереди {len(clients)} человек",
+            f"Время ожидания {len(clients) * 15} мин"
         ]}
 
 

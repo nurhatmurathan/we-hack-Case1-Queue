@@ -1,6 +1,6 @@
 from django.db import models
 from django.db.models import UniqueConstraint
-
+from django.utils import timezone
 
 class Establishment(models.Model):
     name = models.CharField(max_length=255)
@@ -30,6 +30,7 @@ class Consultant(models.Model):
 
 
 class Client(models.Model):
+    date = models.DateField(auto_now_add=True)
     email = models.CharField(max_length=255)
     iin = models.CharField(max_length=12)
     status = models.CharField(max_length=50, choices=
@@ -56,3 +57,4 @@ class Booking(models.Model):
 
     def __str__(self):
         return f"{self.consultant.name} - {self.date}"
+
