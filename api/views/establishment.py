@@ -1,3 +1,5 @@
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.decorators import action
 from rest_framework.viewsets import ReadOnlyModelViewSet
 from rest_framework.response import Response
@@ -23,6 +25,18 @@ class EstablishmentReadonlyModelViewSet(ReadOnlyModelViewSet):
 
         return super().get_serializer_class()
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='type',
+                type=OpenApiTypes.STR,
+                required=True,
+                description='Type of the consultants to retrieve',
+                enum=['live', 'date']
+            )
+        ],
+        responses=ConsultantSerializer(many=True)
+    )
     @action(detail=True, methods=['get'], url_path="consultants")
     def get_establishment_consultants_by_types(self, request, pk):
         try:
