@@ -4,7 +4,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, get_list_or_404
 from django.utils.timezone import now
 
 from api.models import *
@@ -17,12 +17,15 @@ from api.serializers.client import ClientListSerializer, ClientUpdateSerializer
 class ConsultantClientsListAPIView(APIView):
     def get(self, request):
         try:
-            consultant = get_object_or_404(Consultant, id=1)
+            consultants = get_list_or_404(Consultant)
 
-            clients = consultant.client_set.filter(date=now().date())
-            serializer = ClientListSerializer(clients, many=True)
+            list = []
+            for consultant in consultants:
+                clients = consultant.client_set.filter(date=now().date())
+                serializer = ClientListSerializer(clients, many=True)
+                list.append(serializer.data)
 
-            return Response(data=serializer.data, status=status.HTTP_200_OK)
+            return Response(data=list, status=status.HTTP_200_OK)
         except Exception as exception:
             return Response(data={'error': str(exception)}, status=status.HTTP_400_BAD_REQUEST)
 
