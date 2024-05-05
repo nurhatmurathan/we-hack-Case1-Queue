@@ -27,7 +27,7 @@ class ConsultantSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Consultant
-        fields = ['name', 'type', 'establishment']
+        fields = ['id', 'name', 'type', 'establishment']
 
 
 class TimeSlotSerializer(serializers.ModelSerializer):
