@@ -1,9 +1,7 @@
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
-from api.models import Client, Consultant, Booking, TimeSlots
-from api.serializers.consultant import ConsultantEstablishmentSerializer
-from api.serializers.esatablishment import EstablishmentSerializer
+from api.models import Client, Consultant, Establishment, Booking, TimeSlots
 
 
 class BookingInfoSerializer(serializers.Serializer):
@@ -18,25 +16,28 @@ class ClientSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class ClientListSerializer(serializers.ModelSerializer):
+class EstablishmentSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Client
-        fields = ['id', 'email', 'iin', 'status']
+        model = Establishment
+        fields = ['id', 'name', 'address', 'url']
 
 
-class ClientUpdateSerializer(serializers.ModelSerializer):
+class ConsultantSerializer(serializers.ModelSerializer):
+    establishment = EstablishmentSerializer()
+
     class Meta:
-        model = Client
-        fields = ['status']
+        model = Consultant
+        fields = ['name', 'type', 'establishment']
 
-    def update(self, instance, validated_data):
-        instance.status = validated_data.get('status', instance.status)
-        instance.save()
-        return instance
+
+class TimeSlotSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TimeSlots
+        fields = ['slot']
 
 
 class ClientSerializerIIN(serializers.ModelSerializer):
-    consultant_info = ConsultantEstablishmentSerializer(source='consultant', read_only=True)
+    consultant_info = ConsultantSerializer(source='consultant', read_only=True)
     waiting_count = serializers.IntegerField(read_only=True, required=False)
     booking_info = serializers.SerializerMethodField()
 
@@ -55,3 +56,21 @@ class ClientSerializerIIN(serializers.ModelSerializer):
                     'consultant': booking.consultant.name if booking.consultant else None
                 }
         return None
+
+
+class ClientListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Client
+        fields = ['id', 'email', 'iin', 'status']
+
+
+class ClientUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Client
+        fields = ['status']
+
+
+    def update(self, instance, validated_data):
+        instance.status = validated_data.get('status', instance.status)
+        instance.save()
+        return instance
