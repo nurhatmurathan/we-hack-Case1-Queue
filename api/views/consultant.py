@@ -19,7 +19,7 @@ class ConsultantClientsListAPIView(APIView):
         try:
             consultant = get_object_or_404(Consultant, id=1)
 
-            clients = consultant.client_set.filter(date=now().date(), status='waiting')
+            clients = consultant.client_set.filter(date=now().date())
             serializer = ClientListSerializer(clients, many=True)
 
             return Response(data=serializer.data, status=status.HTTP_200_OK)
