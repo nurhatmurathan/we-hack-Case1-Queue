@@ -51,7 +51,7 @@ class TimeSlots(models.Model):
 class Booking(models.Model):
     date = models.DateField(auto_now=True)
     slot = models.ForeignKey(TimeSlots, null=True, blank=True, on_delete=models.SET_NULL)
-    consultant = models.ForeignKey(Consultant, on_delete=models.CASCADE)
+    consultant = models.ForeignKey(Consultant, on_delete=models.SET_NULL)
 
     def __str__(self):
         return f"{self.consultant.name} - {self.date}"
