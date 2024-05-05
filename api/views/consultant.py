@@ -23,7 +23,9 @@ class ConsultantClientsListAPIView(APIView):
             for consultant in consultants:
                 clients = consultant.client_set.filter(date=now().date())
                 serializer = ClientListSerializer(clients, many=True)
-                list.append(serializer.data)
+
+                for data in serializer.data:
+                    list.append(data)
 
             return Response(data=list, status=status.HTTP_200_OK)
         except Exception as exception:
