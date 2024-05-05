@@ -44,9 +44,15 @@ class Client(models.Model):
         return self.email
 
 
-class Date(models.Model):
-    date = models.DateField()
-    client = models.ForeignKey(Client, on_delete=models.CASCADE)
+class TimeSlots(models.Model):
+    slot = models.CharField(max_length=25)
+
+
+class Booking(models.Model):
+    date = models.DateField(auto_now=True)
+    slot = models.ForeignKey(TimeSlots, null=True, blank=True, on_delete=models.SET_NULL)
+    consultant = models.ForeignKey(Consultant, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"{self.client.email} - {self.date}"
+        return f"{self.consultant.name} - {self.date}"
+
