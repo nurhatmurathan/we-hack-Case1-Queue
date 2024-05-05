@@ -1,8 +1,10 @@
+from django.shortcuts import get_object_or_404
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, OpenApiParameter, inline_serializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+
 
 from api.models import Consultant, Client
 from api.serializers.consultant import LiveResponseSerializer
@@ -60,7 +62,6 @@ class RecordAPIView(APIView):
             raise KeyError("Command handler not found for the provided command type.")
 
     def _handle_date_command(self, establishment_id):
-        # Dummy implementation
         return {'result': f'Date command handled for {establishment_id}'}
 
     def _handle_live_command(self, establishment_id):
