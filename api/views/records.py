@@ -74,7 +74,7 @@ class RecordAPIView(APIView):
         return {'headers': [
             f"Свободные окошки {len(consultants)}/{len(consultants) - len(clients_in_processing)}",
             f"В очереди {len(clients)} человек",
-            f"Время ожидания {len(clients) * 15} мин"
+            f"Время ожидания {(len(clients) - len(clients_in_processing)) * 15} мин"
         ]}
 
 
